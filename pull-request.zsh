@@ -3,17 +3,41 @@
 # EXAMPLES:
 # - GITHUB_KEYWORD="https://github.com/"
 # - GITHUB_KEYWORD="github:"
+# Also please set the default branch which you want to
+# merge into when issuing pull-requests.
+# EXAMPLES:
+# - GITHUB_REQUEST_TO="staging"
+# - GITHUB_REQUEST_TO="master"
 # Then use one of the following commands to open a pull-request
 # in your browser.
 # - pull-request
 #   - will open a pull-request from this branch into staging
+rr_github_request_to_branch() {
+
+  param=$1
+  if [[ -n $param ]]; then
+    echo $param
+  else
+    if [[ -n $GITHUB_REQUEST_TO ]]; then
+      echo $GITHUB_REQUEST_TO
+    else
+      return 1
+    fi
+  fi
+
+}
+
 rr_github_pull_request() {
 
   if [[ ! -d .git ]]; then
     echo "This is not a git repository..."
     return 0
   else
-    target_branch="staging"
+    target_branch=$(rr_github_request_to_branch $1)
+    if [[ $? -eq 1 ]]; then
+      echo "Please provide a pull-request branch (GITHUB_REQUEST_TO)."
+      return 1
+    fi
     the_remote=$(git ls-remote --get-url origin)
     repository=$(echo $the_remote | grep -oP --color=never "${GITHUB_KEYWORD}\w+/\w+")
     repository=$(echo $repository | grep -oP --color=never "\w+/\w+")
